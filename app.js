@@ -1303,6 +1303,58 @@ const topic5_2 = {
         `<b>역전파(연쇄법칙)</b>&nbsp; ∂L/∂ŷ=${o.dL_dyhat.toFixed(3)} → ∂L/∂z2=${o.dL_dz2.toFixed(3)} → `+
         `<b>∂L/∂w2=${o.dL_dw2.toFixed(3)}</b>, ∂L/∂b2=${o.dL_db2.toFixed(3)} → ∂L/∂a1=${o.dL_da1.toFixed(3)} → `+
         `∂L/∂z1=${o.dL_dz1.toFixed(3)} → <b>∂L/∂w1=${o.dL_dw1.toFixed(3)}</b>, ∂L/∂b1=${o.dL_db1.toFixed(3)}`;
+
+      // --- diagram: forward pass (teal, top-to-bottom arrows) vs backward pass (amber, right-to-left) ---
+      const wCss = canvas.parentElement.clientWidth;
+      const h = 170, dpr = window.devicePixelRatio||1;
+      canvas.style.width = wCss+'px'; canvas.style.height = h+'px';
+      canvas.width = wCss*dpr; canvas.height = h*dpr;
+      const ctx = canvas.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0);
+      ctx.fillStyle='#081019'; ctx.fillRect(0,0,wCss,h);
+
+      const nodes = [
+        {label:'x',   val:x},
+        {label:'z1',  val:o.z1},
+        {label:'a1',  val:o.a1},
+        {label:'z2',  val:o.z2},
+        {label:'ŷ',   val:o.yhat},
+        {label:'Loss',val:o.loss},
+      ];
+      const n = nodes.length;
+      const gap = wCss/n;
+      const cy = h*0.5, radius = Math.min(24, gap*0.28);
+
+      // forward arrows (teal), drawn along the bottom curve
+      ctx.strokeStyle = '#63d9c4'; ctx.lineWidth = 1.6;
+      for(let i=0;i<n-1;i++){
+        const x1 = gap*i+gap/2+radius, x2 = gap*(i+1)+gap/2-radius;
+        ctx.beginPath(); ctx.moveTo(x1, cy+radius+10); ctx.quadraticCurveTo((x1+x2)/2, cy+radius+26, x2, cy+radius+10); ctx.stroke();
+      }
+      // backward arrows (amber), drawn along the top curve, right to left
+      ctx.strokeStyle = '#ffb454'; ctx.lineWidth = 1.6;
+      for(let i=n-1;i>0;i--){
+        const x1 = gap*i+gap/2-radius, x2 = gap*(i-1)+gap/2+radius;
+        ctx.beginPath(); ctx.moveTo(x1, cy-radius-10); ctx.quadraticCurveTo((x1+x2)/2, cy-radius-26, x2, cy-radius-10); ctx.stroke();
+        // arrowhead pointing left
+        ctx.beginPath(); ctx.moveTo(x2,cy-radius-10); ctx.lineTo(x2+7,cy-radius-15); ctx.lineTo(x2+7,cy-radius-5); ctx.closePath(); ctx.fillStyle='#ffb454'; ctx.fill();
+      }
+
+      nodes.forEach((nd,i)=>{
+        const cx = gap*i+gap/2;
+        ctx.beginPath(); ctx.arc(cx,cy,radius,0,7);
+        ctx.fillStyle='#101f2b'; ctx.fill();
+        ctx.strokeStyle='#5d7683'; ctx.lineWidth=1.6; ctx.stroke();
+        ctx.fillStyle='#e7f0f2'; ctx.font='11px IBM Plex Mono, monospace'; ctx.textAlign='center';
+        ctx.fillText(nd.label, cx, cy-radius-32);
+        ctx.fillStyle='#e7f0f2'; ctx.font='10px IBM Plex Mono, monospace';
+        ctx.fillText(nd.val.toFixed(2), cx, cy+4);
+        ctx.textAlign='left';
+      });
+      ctx.fillStyle='#63d9c4'; ctx.font='10px IBM Plex Mono, monospace'; ctx.textAlign='center';
+      ctx.fillText('forward pass →', wCss/2, cy+radius+46);
+      ctx.fillStyle='#ffb454';
+      ctx.fillText('← backward pass (연쇄법칙)', wCss/2, 16);
+      ctx.textAlign='left';
     }
     const controls = el('div',{class:'controls'});
     controls.appendChild(makeSlider({label:'입력 x', min:-2,max:2,step:0.05,value:x, fmt2:v=>v.toFixed(2), onInput:v=>{x=v;draw();}}).wrap);
@@ -1313,6 +1365,7 @@ const topic5_2 = {
     const fwdOut = el('div',{class:'readout', style:'flex-direction:column; gap:6px;'});
     const bwdOut = el('div',{class:'readout', style:'flex-direction:column; gap:6px; color:#ffb454;'});
     p.appendChild(fwdOut); p.appendChild(bwdOut);
+    window.addEventListener('resize', draw);
     draw();
     p.appendChild(el('div',{class:'note'},['💡 굵게 표시된 ∂L/∂w1, ∂L/∂w2가 실제 경사하강법 업데이트에 쓰이는 그래디언트입니다. 역전파는 이 값들을 출력층 쪽에서부터 연쇄법칙으로 "거슬러 올라가며" 계산해요.']));
     root.appendChild(p);
@@ -1969,6 +2022,15 @@ function goToTopic(id){
     stage.appendChild(el('div',{class:'panel'}, ['이 데모를 불러오는 중 오류가 발생했습니다: '+err.message]));
     console.error(err);
   }
+
+  // topic.render() builds each demo's canvas while it is still detached from
+  // the document (clientWidth reads 0 at that point), then attaches it to
+  // `stage` as its very last step. Now that everything is truly attached and
+  // laid out, fire a synthetic resize so every demo's existing resize handler
+  // (graph.resize()+draw(), or draw() alone) recomputes real dimensions and
+  // redraws correctly. This fixes sizing for all demos without touching any
+  // of their individual render() implementations.
+  requestAnimationFrame(()=>{ window.dispatchEvent(new Event('resize')); });
 
   // prev/next
   const flat = flatTopicList();
