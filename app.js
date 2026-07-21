@@ -282,8 +282,23 @@ const topic1_1 = {
 const topic1_2 = {
   id:'1-2', title:"1-2강. 경사하강법 vs Newton's Method",
   desc:`둘 다 함수의 최솟값을 찾아가는 <b>최적화 알고리즘</b>입니다.
-  경사하강법은 <code>x ← x - η·f'(x)</code> 로 기울기 방향으로 조금씩 내려가고,
-  Newton's Method는 <code>x ← x - f'(x)/f''(x)</code> 로 곡률(2차 미분)까지 활용해 더 빠르게 수렴합니다.
+
+  <div class="formula">
+  <span class="term">경사하강법</span> &nbsp; x ← x − η·f'(x)
+  <small>η(학습률)만큼, 기울기가 가리키는 반대 방향으로 이동. 1차 미분(기울기)만 사용.</small>
+  </div>
+  <div class="formula">
+  <span class="term">Newton's Method</span> &nbsp; x ← x − f'(x)/f''(x)
+  <small>2차 미분(곡률)까지 이용해서 "얼마나 멀리 가야 하는지"까지 자동으로 계산.</small>
+  </div>
+
+  Newton's Method는 현재 위치에서 함수를 <b>포물선(2차 함수)으로 근사</b>한 뒤, 그 포물선의 정확한
+  꼭짓점으로 한 번에 점프하는 방식이라 훨씬 빠르게 수렴하지만, 2차 미분을 계산하는 비용이 크고
+  차원이 높아지면(딥러닝처럼 파라미터가 수백만 개면) 현실적으로 쓰기 어렵습니다 — 그래서 딥러닝은
+  대부분 경사하강법 계열을 씁니다.
+
+  <div class="analogy">🌫️ <b>비유</b>: 안개가 자욱해서 발밑밖에 안 보이는 산에서 내려간다고 해보세요. 경사하강법은 "지금 발밑이 기울어진 방향으로 한 걸음"만 반복하는 방식이고, Newton's Method는 잠깐 서서 주변 지형의 굴곡(곡률)까지 가늠해본 뒤 "이 정도 크기로 가면 골짜기 바닥에 거의 도달하겠다"고 계산해서 성큼 내딛는 방식이에요.</div>
+
   학습률과 시작점을 바꿔가며 두 경로를 비교해보세요.`,
   render(root){
     const p = panel('f(x) = 0.3x⁴ − x² + 0.1x  위에서의 하강 경로');
@@ -356,7 +371,16 @@ const topic1_3 = {
   id:'1-3', title:'1-3강. 자기지도학습 (Self-Supervised Learning)',
   desc:`정답 라벨 없이, <b>데이터 그 자체에서 정답을 만들어내는</b> 학습 방식입니다.
   대표적으로 이미지의 일부를 가리고(masking) 나머지 부분으로부터 가려진 부분을 예측하게 만드는
-  "pretext task"가 있습니다. 아래 그리드에서 마스킹 비율을 조절하고 "가려보기 → 복원해보기"를 눌러보세요.`,
+  "pretext task"가 있습니다.
+
+  <div class="formula">
+  <span class="term">마스킹 손실</span> &nbsp; L = ‖ x_가려진 부분 − f(x_보이는 부분) ‖²
+  <small>모델 f가 "보이는 부분만 보고 가려진 부분을 얼마나 잘 복원하는가"를 손실로 씀 — 사람이 라벨을 달아줄 필요가 없음.</small>
+  </div>
+
+  <div class="analogy">📝 <b>비유</b>: 빈칸 채우기 시험과 비슷해요. "나는 어제 학교에 ___ 갔다" 같은 문장에서 빈칸을 맞히려면, 굳이 누가 정답을 알려주지 않아도 문장 자체(맥락)만 보고 학습할 수 있죠. 자기지도학습은 데이터의 일부를 가려서 이런 "빈칸 채우기 문제"를 스스로 무한히 만들어내는 것과 같아요.</div>
+
+  아래 그리드에서 마스킹 비율을 조절하고 "가려보기 → 복원해보기"를 눌러보세요.`,
   render(root){
     const p = panel('마스킹 기반 pretext task 시뮬레이션 (8×8 패턴)');
     const cw = el('div',{class:'canvas-wrap'});
@@ -429,8 +453,15 @@ const topic1_3 = {
 const topic1_4 = {
   id:'1-4', title:'1-4강. 강화학습 (Reinforcement Learning)',
   desc:`에이전트가 <b>환경과 상호작용</b>하며 보상(reward)을 최대화하는 행동을 스스로 찾아가는 학습 방식입니다.
-  아래는 5×5 그리드월드에서 <b>가치반복(Value Iteration)</b>으로 각 칸의 가치를 계산하고,
-  그 가치가 높은 방향으로 이동하는 정책을 실행하는 예시입니다. 할인율 γ를 바꿔보세요.`,
+
+  <div class="formula">
+  <span class="term">벨만 방정식 (Bellman Equation)</span> &nbsp; V(s) = maxₐ [ r(s,a) + γ·V(s') ]
+  <small>"이 상태(s)의 가치는, 가장 좋은 행동(a)을 했을 때 받는 즉시 보상(r) + 할인된 미래 가치(γV(s'))" — 이 재귀적 정의를 반복 계산하는 게 가치반복(Value Iteration)입니다.</small>
+  </div>
+
+  아래는 5×5 그리드월드에서 이 식을 반복 적용해 각 칸의 가치를 계산하고, 그 가치가 높은 방향으로
+  이동하는 정책을 실행하는 예시입니다. 할인율 γ를 바꿔보세요 — γ가 작을수록 "당장의 보상"을,
+  γ가 클수록 "먼 미래의 보상"까지 중요하게 여깁니다.`,
   render(root){
     const p = panel('그리드월드 · 가치반복(Value Iteration) 기반 정책');
     const cw = el('div',{class:'canvas-wrap'});
@@ -525,9 +556,18 @@ const CHAPTER_1 = { id:'1', label:'1강 · 딥러닝이란', topics:[topic1_1, t
    ========================================================= */
 const topic2_1 = {
   id:'2-1', title:'2-1강 · 2-2강. 인공신경망 (Artificial Neural Network)',
-  desc:`인공신경망의 기본 단위는 <b>뉴런(perceptron)</b>입니다. 입력 <code>x</code>에 가중치
-  <code>w</code>를 곱하고 편향 <code>b</code>를 더한 뒤(<code>z = w·x+b</code>), <b>활성화함수</b>를 통과시켜
-  출력 <code>a = σ(z)</code>를 만듭니다. 이런 뉴런을 여러 층으로 쌓은 것이 인공신경망입니다.
+  desc:`인공신경망의 기본 단위는 <b>뉴런(perceptron)</b>입니다.
+
+  <div class="formula">
+  <span class="term">뉴런 하나의 계산</span> &nbsp; z = w·x + b &nbsp;→&nbsp; a = σ(z)
+  <small>입력 x에 가중치 w를 곱하고 편향 b를 더한 뒤(선형결합 z), 활성화함수 σ를 통과시켜 출력 a를 만듦.</small>
+  </div>
+
+  이런 뉴런을 여러 층으로 쌓은 것이 인공신경망입니다. 각 가중치 w는 "그 입력을 얼마나 중요하게
+  볼지"를 나타내고, 편향 b는 "얼마나 쉽게 활성화되는지"의 기준점을 조정합니다.
+
+  <div class="analogy">🗳️ <b>비유</b>: 뉴런 하나는 여러 사람의 의견(입력)에 각자 다른 신뢰도(가중치)를 곱해서 최종 결정을 내리는 위원회와 비슷해요. 신뢰하는 사람의 의견(큰 가중치)은 크게 반영되고, 편향 b는 "웬만하면 찬성/반대로 기우는 성향"같은 개인적 성향이라고 보면 돼요.</div>
+
   슬라이더로 값을 바꾸면 아래 네트워크 다이어그램의 계산이 실시간으로 갱신됩니다.`,
   render(root){
     const p = panel('단일 뉴런 계산 + 2층 신경망 순전파(forward pass)');
@@ -616,7 +656,14 @@ const topic2_1 = {
 const topic2_3 = {
   id:'2-3', title:'2-3강. 선형회귀 (Linear Regression)',
   desc:`데이터 점들을 가장 잘 설명하는 직선 <code>ŷ = wx + b</code>를 찾는 문제입니다.
-  손실함수로는 보통 <b>평균제곱오차(MSE)</b> <code>= (1/n)Σ(y-ŷ)²</code>를 사용합니다.
+
+  <div class="formula">
+  <span class="term">평균제곱오차 (MSE)</span> &nbsp; L(w,b) = (1/n) · Σᵢ (yᵢ − ŷᵢ)²
+  <small>모든 점에서 "실제값-예측값" 차이(잔차)를 제곱해서 평균낸 것. 제곱을 쓰는 이유는 부호(+/-)를 없애고, 많이 틀린 점에 더 큰 벌점을 주기 위함.</small>
+  </div>
+
+  <div class="analogy">🎯 <b>비유</b>: 모든 데이터 점에 용수철(스프링)을 하나씩 연결하고, 그 스프링들을 자에 걸어놓았다고 생각해보세요. 자가 어느 위치에서 균형을 잡을지는 모든 스프링이 당기는 힘(잔차)의 합이 최소가 되는 지점이에요 — 그게 바로 최소제곱법이 찾는 직선입니다.</div>
+
   w, b를 직접 조절해서 손실을 최소화해보고, "최적해 찾기"로 최소제곱법 정답과 비교해보세요.`,
   render(root){
     const p = panel('직선 피팅과 잔차(residual)');
@@ -665,9 +712,16 @@ const topic2_3 = {
 
 const topic2_4 = {
   id:'2-4', title:'2-4강. 경사하강법 (2차원 손실 곡면)',
-  desc:`손실함수가 여러 개의 파라미터를 가질 때, 경사하강법은 <b>손실 곡면 위에서 기울기(그래디언트)의
-  반대 방향</b>으로 이동하며 최솟값을 찾습니다. 여기서는 f(w,b) = w² + 3b² 라는 그릇 모양 손실 곡면에서
-  경사하강 경로를 확인해보세요.`,
+  desc:`손실함수가 여러 개의 파라미터를 가질 때, 경사하강법은 <b>손실 곡면 위에서 그래디언트(모든
+  편미분을 모은 벡터)의 반대 방향</b>으로 이동하며 최솟값을 찾습니다.
+
+  <div class="formula">
+  <span class="term">다변수 경사하강법</span> &nbsp; (w,b) ← (w,b) − η·∇L(w,b)
+  <small>∇L = (∂L/∂w, ∂L/∂b) — 각 파라미터를 "그 방향으로의 편미분"만큼씩 동시에 업데이트.</small>
+  </div>
+
+  여기서는 f(w,b) = w² + 3b² 라는 그릇 모양 손실 곡면에서 경사하강 경로를 확인해보세요. b 방향의
+  계수(3)가 더 커서 곡면이 그 방향으로 더 가파르다는 점에 주목하세요.`,
   render(root){
     const p = panel('f(w,b) = w² + 3b²  등고선 위의 경사하강 경로');
     const cw = el('div',{class:'canvas-wrap'});
@@ -728,7 +782,14 @@ const topic2_4 = {
 const topic2_5 = {
   id:'2-5', title:'2-5강. 웨이트 초기화 기법들',
   desc:`가중치를 어떻게 초기화하느냐에 따라 층을 거듭할수록 <b>활성화 값이 0으로 소멸하거나 폭발</b>할 수 있습니다.
-  Xavier 초기화(<code>~1/√n</code>)는 sigmoid/tanh에, He 초기화(<code>~√(2/n)</code>)는 ReLU에 적합합니다.
+
+  <div class="formula">
+  <span class="term">Xavier 초기화</span> &nbsp; w ~ N(0, 1/n_in) &nbsp;&nbsp;&nbsp; <span class="term">He 초기화</span> &nbsp; w ~ N(0, 2/n_in)
+  <small>n_in = 그 층에 들어오는 입력(뉴런) 개수. 각 층을 통과해도 출력의 분산이 입력과 비슷하게 유지되도록 설계된 값입니다.</small>
+  </div>
+
+  Xavier(<code>1/√n</code> 스케일)는 sigmoid/tanh처럼 대칭적인 활성화함수에, He(<code>√(2/n)</code> 스케일)는
+  ReLU가 입력의 절반을 0으로 죽이는 것까지 감안해 분산을 2배로 보정한 값으로 ReLU 계열에 적합합니다.
   아래에서 초기화 방식을 바꿔가며 층이 깊어질수록 활성화 분포가 어떻게 변하는지 관찰해보세요.`,
   render(root){
     const p = panel('층별 활성화 값 분포 (6개 층, 뉴런 64개, 고정 시드)');
@@ -814,7 +875,135 @@ const topic2_5 = {
   }
 };
 
-const CHAPTER_2 = { id:'2', label:'2강 · 인공신경망 기초', topics:[topic2_1, topic2_3, topic2_4, topic2_5] };
+const topic2_6 = {
+  id:'2-6', title:'2-6강. 경사하강법의 종류 (SGD, Momentum, RMSProp, Adam)',
+  desc:`"경사하강법"은 한 종류가 아니라 <b>업데이트 규칙이 다른 여러 변형</b>이 있습니다. 실제로 딥러닝
+  라이브러리에서 옵티마이저를 고를 때 마주치는 이름들이 바로 이것들이에요.
+
+  <div class="formula">
+  <span class="term">SGD (확률적 경사하강법)</span> &nbsp; w ← w − η·∇L(w)
+  <small>매 스텝, 그래디언트 방향으로 학습률(η)만큼 이동. 가장 단순한 형태.</small>
+  </div>
+  <div class="formula">
+  <span class="term">Momentum</span> &nbsp; v ← β·v − η·∇L(w) &nbsp;·&nbsp; w ← w + v
+  <small>이전 이동 방향(v, "속도")을 β 비율만큼 계속 이어받아, 방향이 일정하면 점점 가속됩니다.</small>
+  </div>
+  <div class="formula">
+  <span class="term">RMSProp</span> &nbsp; s ← ρ·s + (1−ρ)·∇L(w)² &nbsp;·&nbsp; w ← w − η·∇L(w)/√(s+ε)
+  <small>그래디언트 제곱의 이동평균(s)으로 나눠줘서, 자주 크게 흔들리는 방향은 자동으로 보폭을 줄입니다.</small>
+  </div>
+  <div class="formula">
+  <span class="term">Adam</span> &nbsp; Momentum(1차 모멘트) + RMSProp(2차 모멘트)을 결합, 편향 보정까지 추가
+  <small>지금 가장 널리 쓰이는 방식 — "어느 방향으로, 얼마나 크게" 갈지를 둘 다 적응적으로 정합니다.</small>
+  </div>
+
+  <div class="analogy">🎿 <b>비유</b>: 눈 덮인 울퉁불퉁한 언덕을 스키로 내려간다고 생각해보세요. <b>SGD</b>는 매 순간 발밑 경사만 보고 그 방향으로 정직하게 한 걸음씩 내딛는 사람입니다 — 울퉁불퉁한 곳에서 자꾸 좌우로 미끄러집니다. <b>Momentum</b>은 이미 어느 정도 속도가 붙어서 미끄러지듯 내려가는 스키어라, 작은 요철에는 크게 흔들리지 않고 관성으로 밀고 나갑니다. <b>RMSProp</b>은 "최근 유난히 심하게 흔들렸던 방향"으로는 자동으로 브레이크를 걸어주는 스마트 바인딩 같은 거고, <b>Adam</b>은 이 둘을 합쳐서 관성도 있고 방향별 브레이크도 있는, 요즘 가장 많이 쓰는 세팅입니다.</div>
+
+  아래에서 같은 울퉁불퉁한 지형 위에 네 가지 방법을 동시에 출발시켜서 경로 차이를 비교해보세요.`,
+  render(root){
+    const p = panel('같은 시작점 · 같은 지형, 옵티마이저별 경로 비교');
+    const cw = el('div',{class:'canvas-wrap'});
+    const canvas = el('canvas'); cw.appendChild(canvas); p.appendChild(cw);
+
+    // a ravine-like landscape: steep in y, shallow in x, with mild bumps — classic case where momentum/adam shine
+    const f = (x,y)=> 0.06*x*x + 1.6*y*y + 0.25*Math.sin(x*1.6)*0.4;
+    const gradf = (x,y,h=1e-3)=> [ (f(x+h,y)-f(x-h,y))/(2*h), (f(x,y+h)-f(x,y-h))/(2*h) ];
+
+    let lr=0.35, momentumBeta=0.85, iters=40;
+    const x0=3.2, y0=1.6;
+
+    function runSGD(){
+      let x=x0,y=y0; const path=[[x,y]];
+      for(let i=0;i<iters;i++){ const [gx,gy]=gradf(x,y); x-=lr*gx; y-=lr*gy; path.push([x,y]); }
+      return path;
+    }
+    function runMomentum(){
+      let x=x0,y=y0,vx=0,vy=0; const path=[[x,y]];
+      for(let i=0;i<iters;i++){ const [gx,gy]=gradf(x,y); vx=momentumBeta*vx-lr*gx; vy=momentumBeta*vy-lr*gy; x+=vx; y+=vy; path.push([x,y]); }
+      return path;
+    }
+    function runRMSProp(){
+      let x=x0,y=y0,sx=0,sy=0; const rho=0.9, eps=1e-6; const path=[[x,y]];
+      for(let i=0;i<iters;i++){ const [gx,gy]=gradf(x,y); sx=rho*sx+(1-rho)*gx*gx; sy=rho*sy+(1-rho)*gy*gy;
+        x-=lr*gx/Math.sqrt(sx+eps); y-=lr*gy/Math.sqrt(sy+eps); path.push([x,y]); }
+      return path;
+    }
+    function runAdam(){
+      let x=x0,y=y0,mx=0,my=0,vx2=0,vy2=0; const b1=0.9,b2=0.999,eps=1e-8; const path=[[x,y]];
+      for(let i=1;i<=iters;i++){ const [gx,gy]=gradf(x,y);
+        mx=b1*mx+(1-b1)*gx; my=b1*my+(1-b1)*gy;
+        vx2=b2*vx2+(1-b2)*gx*gx; vy2=b2*vy2+(1-b2)*gy*gy;
+        const mxh=mx/(1-Math.pow(b1,i)), myh=my/(1-Math.pow(b1,i));
+        const vxh=vx2/(1-Math.pow(b2,i)), vyh=vy2/(1-Math.pow(b2,i));
+        x-=lr*mxh/(Math.sqrt(vxh)+eps); y-=lr*myh/(Math.sqrt(vyh)+eps); path.push([x,y]);
+      }
+      return path;
+    }
+
+    const optimizers = [
+      {name:'SGD', color:'#ff6b6b', run:runSGD, on:true},
+      {name:'Momentum', color:'#ffb454', run:runMomentum, on:true},
+      {name:'RMSProp', color:'#b48bf2', run:runRMSProp, on:true},
+      {name:'Adam', color:'#63d9c4', run:runAdam, on:true},
+    ];
+
+    let graph;
+    function draw(){
+      graph.clear(); graph.axes();
+      for(let k=1;k<=9;k++){
+        const level = k*k*0.25;
+        graph.ctx.strokeStyle = 'rgba(61,140,150,'+(0.10+k*0.025)+')'; graph.ctx.lineWidth=1;
+        graph.ctx.beginPath();
+        for(let a=0;a<=80;a++){
+          const th=a/80*2*Math.PI;
+          const x = Math.sqrt(level/0.06)*Math.cos(th)*0.5, y = Math.sqrt(level/1.6)*Math.sin(th)*0.5;
+          const px=graph.X(x), py=graph.Y(y);
+          if(a===0) graph.ctx.moveTo(px,py); else graph.ctx.lineTo(px,py);
+        }
+        graph.ctx.stroke();
+      }
+      let rows='';
+      optimizers.forEach(o=>{
+        if(!o.on) return;
+        const path = o.run();
+        for(let i=0;i<path.length-1;i++) graph.line(path[i][0],path[i][1],path[i+1][0],path[i+1][1],{color:o.color, width:2});
+        path.forEach((pt,i)=> graph.point(pt[0],pt[1],{color:o.color, r:i===path.length-1?5:1.8}));
+        const last = path.at(-1);
+        rows += `${o.name}: 최종 손실 ${fmt(f(last[0],last[1]),3)} &nbsp;·&nbsp; `;
+      });
+      rd.innerHTML = rows;
+    }
+    graph = new Graph(canvas,{xmin:-4,xmax:4,ymin:-2.2,ymax:2.2,heightCss:340});
+    window.addEventListener('resize', ()=>{graph.resize(); draw();});
+
+    const controls = el('div',{class:'controls'});
+    controls.appendChild(makeSlider({label:'학습률 η (공통)', min:0.05,max:0.6,step:0.01,value:lr, fmt2:v=>v.toFixed(2),
+      onInput:v=>{ lr=v; draw(); }}).wrap);
+    controls.appendChild(makeSlider({label:'Momentum β', min:0.3,max:0.97,step:0.01,value:momentumBeta, fmt2:v=>v.toFixed(2),
+      onInput:v=>{ momentumBeta=v; draw(); }}).wrap);
+    controls.appendChild(makeSlider({label:'반복 횟수', min:5,max:80,step:1,value:iters, fmt2:v=>v,
+      onInput:v=>{ iters=v; draw(); }}).wrap);
+    p.appendChild(controls);
+    const btnRow = el('div',{class:'btn-row'});
+    optimizers.forEach(o=>{
+      const b = el('button',{class:'btn', style:`border-color:${o.color}; color:${o.color};`, onclick:()=>{ o.on=!o.on; b.style.opacity = o.on?1:0.35; draw(); }},[o.name]);
+      btnRow.appendChild(b);
+    });
+    p.appendChild(btnRow);
+    const rd = el('div',{class:'readout'}); p.appendChild(rd);
+    draw();
+    p.appendChild(el('div',{class:'legend'},[
+      el('span',{},[el('i',{style:'background:#ff6b6b'}),'SGD']),
+      el('span',{},[el('i',{style:'background:#ffb454'}),'Momentum']),
+      el('span',{},[el('i',{style:'background:#b48bf2'}),'RMSProp']),
+      el('span',{},[el('i',{style:'background:#63d9c4'}),'Adam']),
+    ]));
+    p.appendChild(el('div',{class:'note'},['💡 이 지형은 한쪽(y) 방향은 가파르고 다른 쪽(x) 방향은 완만한 "골짜기(ravine)" 모양이에요 — 실제 신경망 손실함수에서 자주 나타나는 형태입니다. SGD는 가파른 방향으로 지그재그하며 느리게 내려가지만, Momentum/Adam은 그 지그재그를 상쇄하고 완만한 방향으로 더 빠르게 진행하는 걸 확인할 수 있어요.']));
+    root.appendChild(p);
+  }
+};
+
+const CHAPTER_2 = { id:'2', label:'2강 · 인공신경망 기초', topics:[topic2_1, topic2_3, topic2_4, topic2_5, topic2_6] };
 
 /* =========================================================
    CHAPTER 3 — 미적분 기초
@@ -822,9 +1011,14 @@ const CHAPTER_2 = { id:'2', label:'2강 · 인공신경망 기초', topics:[topi
 const topic3_1 = {
   id:'3-1', title:'3-1강. 극한과 입실론-델타 논법',
   desc:`"x가 a에 가까워질 때 f(x)가 L에 가까워진다"는 직관을, <b>ε(오차 허용범위)</b>와
-  <b>δ(x의 허용범위)</b>로 엄밀하게 정의한 것이 입실론-델타 논법입니다: "임의의 ε에 대해,
-  |x-a|&lt;δ 이면 항상 |f(x)-L|&lt;ε 이 되는 δ를 찾을 수 있다." 슬라이더로 ε을 줄여보며
-  그에 맞는 δ 밴드가 어떻게 좁아지는지 확인해보세요.`,
+  <b>δ(x의 허용범위)</b>로 엄밀하게 정의한 것이 입실론-델타 논법입니다.
+
+  <div class="formula">
+  <span class="term">극한의 정의</span> &nbsp; ∀ε&gt;0, ∃δ&gt;0 &nbsp; s.t. &nbsp; 0&lt;|x−a|&lt;δ ⟹ |f(x)−L|&lt;ε
+  <small>"임의로 작은 오차 ε을 정해도, 그에 맞는 δ를 항상 찾을 수 있다"는 뜻. lim(x→a) f(x) = L 의 엄밀한 정의입니다.</small>
+  </div>
+
+  슬라이더로 ε을 줄여보며 그에 맞는 δ 밴드가 어떻게 좁아지는지 확인해보세요.`,
   render(root){
     const p = panel('f(x) = x² ,  a = 1, L = 1 에서의 ε-δ 밴드');
     const cw = el('div',{class:'canvas-wrap'});
@@ -871,9 +1065,17 @@ const topic3_1 = {
 
 const topic3_2 = {
   id:'3-2', title:'3-2강. 미분과 도함수',
-  desc:`도함수 <code>f'(x)</code>는 "x를 아주 조금(h) 움직였을 때 f(x)가 얼마나 변하는가"의 극한값입니다:
-  <code>f'(x) = lim_{h→0} [f(x+h)-f(x)] / h</code>. h가 클 때의 <b>할선(secant line)</b>이
-  h를 0으로 줄이면 <b>접선(tangent line)</b>으로 수렴하는 과정을 직접 확인해보세요.`,
+  desc:`도함수 f'(x)는 "x를 아주 조금(h) 움직였을 때 f(x)가 얼마나 변하는가"의 극한값입니다.
+
+  <div class="formula">
+  <span class="term">도함수의 정의</span> &nbsp; f'(x) = lim(h→0) &nbsp; [f(x+h) − f(x)] / h
+  <small>두 점 (x, f(x))와 (x+h, f(x+h))를 잇는 할선(secant)의 기울기가, h→0일 때 수렴하는 값 = 접선의 기울기.</small>
+  </div>
+
+  <div class="analogy">🚗 <b>비유</b>: 자동차의 "위치"를 시간의 함수라고 하면, 그 도함수는 "속도"예요. 1시간 동안 이동한 평균 속도(할선, h가 큼)보다, 지금 이 순간의 속도계 바늘(접선, h→0)이 훨씬 더 정확한 "지금 이 순간의 변화율"을 알려주는 것과 같습니다.</div>
+
+  h가 클 때의 <b>할선(secant line)</b>이 h를 0으로 줄이면 <b>접선(tangent line)</b>으로 수렴하는 과정을
+  직접 확인해보세요.`,
   render(root){
     const p = panel('f(x) = sin(x) + 0.15x² 위의 할선 → 접선 수렴');
     const cw = el('div',{class:'canvas-wrap'});
@@ -913,8 +1115,18 @@ const topic3_2 = {
 
 const topic3_3 = {
   id:'3-3', title:'3-3강. 연쇄 법칙 (Chain Rule)',
-  desc:`합성함수 <code>z = g(y), y = f(x)</code>의 미분은 <code>dz/dx = dz/dy · dy/dx</code> 로 계산됩니다.
-  이는 딥러닝의 <b>역전파(backpropagation)</b>를 가능하게 하는 가장 핵심적인 수학 도구입니다.
+  desc:`합성함수 z = g(y), y = f(x)의 미분은 다음과 같이 계산됩니다.
+
+  <div class="formula">
+  <span class="term">연쇄 법칙</span> &nbsp; dz/dx = (dz/dy) · (dy/dx)
+  <small>"z가 y를 통해 x에 얼마나 민감한가"는, "z가 y에 얼마나 민감한가"와 "y가 x에 얼마나 민감한가"를 곱한 것과 같음.</small>
+  </div>
+
+  이는 딥러닝의 <b>역전파(backpropagation)</b>를 가능하게 하는 가장 핵심적인 수학 도구입니다 — 여러 층을
+  거치는 신경망도 결국 함수의 합성이기 때문입니다.
+
+  <div class="analogy">⚙️ <b>비유</b>: 서로 맞물린 톱니바퀴 세 개를 생각해보세요. 첫 번째 기어가 1바퀴 돌 때 두 번째 기어가 2바퀴 돈다면(dy/dx=2), 두 번째 기어가 1바퀴 돌 때 세 번째 기어가 3바퀴 돈다면(dz/dy=3), 첫 번째 기어가 1바퀴 돌 때 세 번째 기어는 2×3=6바퀴 돕니다. 각 연결의 "배율"을 그냥 곱하면 되는 거예요.</div>
+
   아래에서 x를 바꿔가며 각 단계의 값과 미분이 어떻게 곱해지는지 확인해보세요.`,
   render(root){
     const p = panel('y = f(x) = x², z = g(y) = sin(y)  →  dz/dx = cos(y)·2x');
@@ -975,8 +1187,16 @@ const topic3_3 = {
 const topic3_4 = {
   id:'3-4', title:'3-4강. 편미분과 그래디언트',
   desc:`변수가 2개 이상인 함수에서, <b>한 변수만 남기고 나머지를 상수로 고정</b>한 채 미분하는 것이
-  편미분입니다. 모든 변수에 대한 편미분을 모은 벡터 <code>∇f = (∂f/∂x, ∂f/∂y)</code>가 <b>그래디언트</b>이며,
-  이는 함수가 <b>가장 가파르게 증가하는 방향</b>을 가리킵니다. 점을 옮겨가며 화살표를 확인해보세요.`,
+  편미분입니다.
+
+  <div class="formula">
+  <span class="term">그래디언트</span> &nbsp; ∇f = (∂f/∂x, ∂f/∂y)
+  <small>모든 변수에 대한 편미분을 모은 벡터. 크기는 "가장 가파른 증가율", 방향은 "가장 가파르게 증가하는 방향"을 가리킵니다.</small>
+  </div>
+
+  <div class="analogy">🧭 <b>비유</b>: 산 위의 한 지점에 서서 나침반 대신 "경사계"를 들고 있다고 생각해보세요. ∇f는 "지금 이 자리에서 가장 가파르게 올라가는 방향이 어디인지" 정확히 가리켜주는 나침반이에요. 경사하강법은 이 나침반이 가리키는 방향과 정반대로 걸어가서 가장 빠르게 내려가는 방법입니다.</div>
+
+  점을 옮겨가며 화살표를 확인해보세요.`,
   render(root){
     const p = panel('f(x,y) = x² + xy + y²  의 등고선과 그래디언트 벡터');
     const cw = el('div',{class:'canvas-wrap'});
@@ -1041,9 +1261,15 @@ const CHAPTER_3 = { id:'3', label:'3강 · 미적분 기초', topics:[topic3_1, 
 const topic4_1 = {
   id:'4-1', title:'4-1강. 랜덤 변수와 확률 분포',
   desc:`랜덤 변수(random variable)는 <b>무작위 실험의 결과를 숫자로 매핑</b>한 것이고,
-  확률 분포는 그 숫자들이 나올 확률을 알려줍니다. 아래에서 주사위(이산)와 동전(베르누이)을
-  반복해서 던져보면, 시행 횟수가 늘어날수록 막대그래프가 이론적 분포에 점점 가까워지는 걸
-  직접 확인할 수 있습니다 — <b>큰 수의 법칙</b>이에요.`,
+  확률 분포는 그 숫자들이 나올 확률을 알려줍니다.
+
+  <div class="formula">
+  <span class="term">큰 수의 법칙 (Law of Large Numbers)</span> &nbsp; (1/n)Σxᵢ → E[X] &nbsp; (n→∞)
+  <small>시행 횟수 n이 커질수록, 관찰된 빈도(경험적 평균)가 진짜 이론적 확률(기댓값)에 수렴합니다.</small>
+  </div>
+
+  아래에서 주사위(이산)와 동전(베르누이)을 반복해서 던져보면, 시행 횟수가 늘어날수록 막대그래프가
+  이론적 분포에 점점 가까워지는 걸 직접 확인할 수 있습니다.`,
   render(root){
     const p = panel('시뮬레이션으로 보는 확률 분포 수렴');
     const cw = el('div',{class:'canvas-wrap'});
@@ -1113,8 +1339,15 @@ const topic4_1 = {
 const topic4_2 = {
   id:'4-2', title:'4-2강. 평균과 분산',
   desc:`평균(mean)은 데이터의 <b>중심 위치</b>, 분산(variance)은 <b>평균으로부터 얼마나 퍼져 있는가</b>를
-  나타냅니다: <code>Var(X) = E[(X-μ)²]</code>. 데이터의 흩어진 정도(퍼짐)를 슬라이더로 조절하면서
-  평균은 그대로인데 분산만 달라지는 모습을 관찰해보세요.`,
+  나타냅니다.
+
+  <div class="formula">
+  <span class="term">평균</span> &nbsp; μ = E[X] = (1/n)Σxᵢ &nbsp;&nbsp;&nbsp; <span class="term">분산</span> &nbsp; σ² = E[(X−μ)²] = (1/n)Σ(xᵢ−μ)²
+  <small>분산은 "평균과의 차이"를 제곱해서 평균낸 것. 제곱근을 취한 σ(표준편차)는 원래 데이터와 같은 단위를 가져서 해석이 더 쉽습니다.</small>
+  </div>
+
+  데이터의 흩어진 정도(퍼짐)를 슬라이더로 조절하면서 평균은 그대로인데 분산만 달라지는 모습을
+  관찰해보세요.`,
   render(root){
     const p = panel('숫자 직선 위의 데이터 분포 — 평균 vs 분산');
     const cw = el('div',{class:'canvas-wrap'});
@@ -1170,8 +1403,14 @@ const topic4_2 = {
 const topic4_3 = {
   id:'4-3', title:'4-3강. 균등 분포와 정규 분포',
   desc:`균등분포(Uniform)는 <b>구간 내 모든 값이 동일한 확률</b>을 갖고, 정규분포(Normal/Gaussian)는
-  <b>평균 근처에 확률이 몰리고 양 끝으로 갈수록 줄어드는</b> 종 모양입니다. 딥러닝에서 가중치 초기화,
-  노이즈 모델링 등에 정규분포가 특히 자주 사용됩니다.`,
+  <b>평균 근처에 확률이 몰리고 양 끝으로 갈수록 줄어드는</b> 종 모양입니다.
+
+  <div class="formula">
+  <span class="term">균등분포 PDF</span> &nbsp; f(x) = 1/(b−a) &nbsp; (a≤x≤b) &nbsp;&nbsp;&nbsp; <span class="term">정규분포 PDF</span> &nbsp; f(x) = 1/(σ√2π) · e^(−(x−μ)²/2σ²)
+  <small>정규분포는 평균 μ와 표준편차 σ 단 두 값으로 모양이 완전히 결정됩니다 — μ가 중심, σ가 폭.</small>
+  </div>
+
+  딥러닝에서 가중치 초기화, 노이즈 모델링 등에 정규분포가 특히 자주 사용됩니다.`,
   render(root){
     const p = panel('확률밀도함수(PDF) 비교');
     const cw = el('div',{class:'canvas-wrap'});
@@ -1226,8 +1465,15 @@ const CHAPTER_4 = { id:'4', label:'4강 · 확률과 통계', topics:[topic4_1, 
 const topic5_1 = {
   id:'5-1', title:'5-1강. Linear Activation과 인공신경망의 통찰',
   desc:`만약 모든 층에서 활성화함수로 <b>선형함수(linear activation)</b>만 사용한다면, 아무리 층을
-  깊게 쌓아도 결국 <b>하나의 선형변환과 수학적으로 동일</b>해집니다 — 비선형 활성화함수가 왜 필수적인지
-  보여주는 핵심 통찰입니다. 두 층의 가중치를 조절하며 "등가 단일층"이 항상 존재함을 확인해보세요.`,
+  깊게 쌓아도 결국 <b>하나의 선형변환과 수학적으로 동일</b>해집니다.
+
+  <div class="formula">
+  <span class="term">2층 선형 네트워크의 붕괴</span> &nbsp; y = w₂(w₁x) = (w₂w₁)·x = w_eq·x
+  <small>선형함수끼리의 합성은 항상 또 다른 선형함수 — 층을 아무리 쌓아도 표현력이 늘지 않음.</small>
+  </div>
+
+  비선형 활성화함수가 왜 필수적인지 보여주는 핵심 통찰입니다. 두 층의 가중치를 조절하며
+  "등가 단일층"이 항상 존재함을 확인해보세요.`,
   render(root){
     const p = panel('2층 선형 네트워크 = 1층 선형 네트워크');
     const cw = el('div',{class:'canvas-wrap'});
@@ -1267,8 +1513,17 @@ const topic5_1 = {
 const topic5_2 = {
   id:'5-2', title:'5-2강. 역전파 (Backpropagation)',
   desc:`역전파는 <b>연쇄법칙을 반복 적용</b>해서 손실함수 L을 각 가중치로 미분한 값(그래디언트)을
-  출력층에서부터 입력층 방향으로 거꾸로 계산하는 알고리즘입니다. 아래는 x → (w1,b1) → sigmoid →
-  (w2,b2) → sigmoid → 손실(MSE) 로 이어지는 최소 네트워크의 순전파/역전파 값을 모두 보여줍니다.`,
+  출력층에서부터 입력층 방향으로 거꾸로 계산하는 알고리즘입니다.
+
+  <div class="formula">
+  <span class="term">역전파의 핵심 (연쇄법칙 반복)</span> &nbsp; ∂L/∂w₁ = (∂L/∂ŷ)·(∂ŷ/∂z₂)·(∂z₂/∂a₁)·(∂a₁/∂z₁)·(∂z₁/∂w₁)
+  <small>출력에서부터 거꾸로 하나씩 곱해나가며 앞쪽 층의 가중치까지 그래디언트를 전달(propagate)합니다.</small>
+  </div>
+
+  <div class="analogy">🔍 <b>비유</b>: 회사에서 프로젝트가 실패했을 때 "왜 실패했는지" 책임을 거슬러 올라가며 따지는 것과 비슷해요. 최종 결과(Loss)부터 시작해서 "출력층 담당자가 얼마나 잘못했는지 → 그 앞 단계 담당자는 얼마나 영향을 줬는지 → 그 앞은..." 순서로 책임(그래디언트)을 거꾸로 나눠주는 거예요. 그래야 각자 자기 몫만큼만 정확히 "고칠 방향"을 알 수 있습니다.</div>
+
+  아래는 x → (w1,b1) → sigmoid → (w2,b2) → sigmoid → 손실(MSE) 로 이어지는 최소 네트워크의
+  순전파/역전파 값을 모두 보여줍니다.`,
   render(root){
     const p = panel('미니 네트워크: x → z1 → a1 → z2 → ŷ → Loss');
     const cw = el('div',{class:'canvas-wrap'});
@@ -1379,9 +1634,19 @@ const CHAPTER_5 = { id:'5', label:'5강 · 순전파와 역전파', topics:[topi
    ========================================================= */
 const topic6_1 = {
   id:'6-1', title:'6-1강. 왜 이진 분류에서 sigmoid를 사용할까?',
-  desc:`Sigmoid 함수 <code>σ(x) = 1/(1+e⁻ˣ)</code>는 실수 전체를 <b>(0,1) 구간으로 압축</b>합니다.
+  desc:`Sigmoid 함수는 실수 전체를 <b>(0,1) 구간으로 압축</b>합니다.
+
+  <div class="formula">
+  <span class="term">Sigmoid</span> &nbsp; σ(x) = 1 / (1 + e^(−x)) &nbsp;&nbsp;&nbsp; <span class="term">미분</span> &nbsp; σ'(x) = σ(x)·(1−σ(x))
+  <small>미분값이 최대 0.25(x=0일 때)로 항상 작다는 점이 나중에 8-1강의 "기울기 소실" 문제로 이어집니다.</small>
+  </div>
+
   이 성질 덕분에 출력을 "확률"로 해석할 수 있어서 이진 분류(binary classification)에 자연스럽게
-  사용됩니다. 기울기 파라미터 k를 조절하며 "결정 경계가 얼마나 날카로워지는지" 확인해보세요.`,
+  사용됩니다.
+
+  <div class="analogy">💡 <b>비유</b>: 옛날 백열등 조광 스위치(디머 스위치)와 비슷해요. 완전히 꺼짐(0)과 완전히 켜짐(1) 사이를 부드럽게 이어주는 스위치죠. 입력이 아주 크면 거의 켜짐(1)에, 아주 작으면 거의 꺼짐(0)에 가까워지고, 그 사이에서는 부드럽게 변합니다.</div>
+
+  기울기 파라미터 k를 조절하며 "결정 경계가 얼마나 날카로워지는지" 확인해보세요.`,
   render(root){
     const p = panel('σ(k·x) — steepness에 따른 sigmoid 모양');
     const cw = el('div',{class:'canvas-wrap'});
@@ -1413,9 +1678,15 @@ const topic6_1 = {
 
 const topic6_2 = {
   id:'6-2', title:'6-2강. 로지스틱 회귀 (Logistic Regression) · 이진 분류',
-  desc:`로지스틱 회귀는 <code>ŷ = σ(wx+b)</code> 형태로 <b>결정 경계(decision boundary)</b>를 학습해서
-  두 클래스를 분류합니다. w, b를 조절하며 경계선이 어떻게 데이터를 나누는지, 그리고 색으로 표현된
-  확률(σ값)이 어떻게 변하는지 확인해보세요.`,
+  desc:`로지스틱 회귀는 <b>결정 경계(decision boundary)</b>를 학습해서 두 클래스를 분류합니다.
+
+  <div class="formula">
+  <span class="term">로지스틱 회귀 모델</span> &nbsp; ŷ = σ(w·x + b) = P(y=1 | x)
+  <small>선형회귀(wx+b)의 출력을 sigmoid로 감싸서, 결과를 "클래스 1일 확률"로 해석 가능하게 만듦.</small>
+  </div>
+
+  w, b를 조절하며 경계선이 어떻게 데이터를 나누는지, 그리고 색으로 표현된 확률(σ값)이 어떻게
+  변하는지 확인해보세요.`,
   render(root){
     const p = panel('2D 산점도 위의 로지스틱 회귀 결정 경계');
     const cw = el('div',{class:'canvas-wrap'});
@@ -1471,9 +1742,18 @@ const topic6_2 = {
 const topic6_4 = {
   id:'6-4', title:'6-4강. 교차 엔트로피(Cross-Entropy)와 MLE',
   desc:`로지스틱 회귀의 손실함수로 MSE 대신 <b>교차 엔트로피</b>를 쓰는 이유는, 확률적으로 정답에서
-  틀릴수록(예측이 확신에 차서 틀릴수록) <b>훨씬 더 크게 벌점</b>을 주기 때문입니다: 
-  <code>L = -[y·log(ŷ) + (1-y)·log(1-ŷ)]</code>. 이는 통계학의 <b>최대우도추정(MLE)</b> 관점과도
-  일치합니다. 예측확률을 슬라이더로 움직이며 손실이 어떻게 폭증하는지 보세요.`,
+  틀릴수록(예측이 확신에 차서 틀릴수록) <b>훨씬 더 크게 벌점</b>을 주기 때문입니다.
+
+  <div class="formula">
+  <span class="term">교차 엔트로피</span> &nbsp; L = −[y·log(ŷ) + (1−y)·log(1−ŷ)]
+  <small>y=1일 때는 -log(ŷ)만, y=0일 때는 -log(1-ŷ)만 남음 — 정답 클래스에 준 확률이 낮을수록 -log가 폭발적으로 커짐.</small>
+  </div>
+  <div class="formula">
+  <span class="term">MLE와의 연결</span> &nbsp; argmax_w log P(data|w) &nbsp;=&nbsp; argmin_w [교차 엔트로피 합]
+  <small>"우도(likelihood)를 최대화" = "교차 엔트로피를 최소화" — 두 관점이 수학적으로 완전히 같은 목적함수입니다.</small>
+  </div>
+
+  예측확률을 슬라이더로 움직이며 손실이 어떻게 폭증하는지 보세요.`,
   render(root){
     const p = panel('Cross-Entropy Loss vs 예측확률 ŷ');
     const cw = el('div',{class:'canvas-wrap'});
@@ -1505,9 +1785,15 @@ const topic6_4 = {
 
 const topic6_5 = {
   id:'6-5', title:'6-5강. 소프트맥스 회귀 (Softmax Regression) · 다중 분류',
-  desc:`클래스가 3개 이상일 때는 <b>소프트맥스 함수</b>로 각 클래스의 점수(logit)를 확률로 변환합니다:
-  <code>softmax(z)ᵢ = eᶻⁱ / Σⱼeᶻʲ</code>. 모든 확률의 합은 항상 1입니다. 세 클래스의 logit을 조절하며
-  확률 막대가 어떻게 재분배되는지 확인해보세요.`,
+  desc:`클래스가 3개 이상일 때는 <b>소프트맥스 함수</b>로 각 클래스의 점수(logit)를 확률로 변환합니다.
+
+  <div class="formula">
+  <span class="term">Softmax</span> &nbsp; softmax(z)ᵢ = e^(zᵢ) / Σⱼ e^(zⱼ)
+  <small>각 클래스 점수를 지수함수(e^z)로 변환해 항상 양수로 만든 뒤, 전체 합으로 나눠서 "비율(확률)"로 정규화.</small>
+  </div>
+
+  모든 확률의 합은 항상 1입니다. 세 클래스의 logit을 조절하며 확률 막대가 어떻게 재분배되는지
+  확인해보세요.`,
   render(root){
     const p = panel('3-클래스 Softmax');
     const cw = el('div',{class:'canvas-wrap'});
@@ -1565,8 +1851,16 @@ const CHAPTER_6 = { id:'6', label:'6강 · 분류(Classification)', topics:[topi
 const topic7 = {
   id:'7', title:'7강. Universal Approximation Theorem (보편 근사 정리)',
   desc:`은닉층이 하나뿐인 신경망이라도, <b>충분히 많은 은닉 뉴런</b>이 있다면 임의의 연속함수를
-  원하는 정확도로 근사할 수 있다는 정리입니다. 여기서는 sigmoid 뉴런들을 계단처럼 쌓아
-  목표 함수를 근사하는 방식을 보여줍니다 — 은닉 뉴런 개수(n)를 늘려보세요.`,
+  원하는 정확도로 근사할 수 있다는 정리입니다.
+
+  <div class="formula">
+  <span class="term">보편 근사 정리 (직관적 서술)</span> &nbsp; ∀연속함수 f, ∀ε&gt;0, ∃N &nbsp; s.t. &nbsp; sup|F_N(x) − f(x)| &lt; ε
+  <small>N개의 은닉 뉴런으로 만든 신경망 F_N이, 목표 함수 f와 어디서든 오차 ε 이내로 가까워지게 만들 수 있음.</small>
+  </div>
+
+  <div class="analogy">🧱 <b>비유</b>: 레고 블록으로 곡선 모양의 조각상을 만든다고 생각해보세요. 블록(뉴런) 하나하나는 각지고 단순하지만, 블록을 충분히 작고 많이 쓰면 어떤 부드러운 곡선 형태든 원하는 정밀도로 흉내낼 수 있어요. 여기서는 sigmoid 뉴런들을 계단처럼 쌓아 목표 함수를 근사하는 방식을 보여줍니다.</div>
+
+  은닉 뉴런 개수(n)를 늘려보세요.`,
   render(root){
     const p = panel('sigmoid 뉴런 n개로 목표 함수 근사하기');
     const cw = el('div',{class:'canvas-wrap'});
@@ -1618,9 +1912,19 @@ const CHAPTER_7 = { id:'7', label:'7강 · 보편 근사 정리', topics:[topic7
 const topic8_1 = {
   id:'8-1', title:'8-1강. Vanishing Gradient(기울기 소실)와 ReLU',
   desc:`역전파는 각 층의 미분값을 <b>곱해나가며</b> 앞쪽 층까지 그래디언트를 전달합니다.
+
+  <div class="formula">
+  <span class="term">L층을 거친 그래디언트</span> &nbsp; ∂Loss/∂w₁ ≈ ∏ᵢ₌₁ᴸ σ'(zᵢ) · (가중치들)
+  <small>각 층의 미분값(σ')을 계속 곱하는 구조 — 1보다 작은 값을 계속 곱하면 지수적으로 0에 가까워집니다.</small>
+  </div>
+
   sigmoid/tanh의 미분값은 최대가 각각 0.25, 1.0으로 작아서, 층이 깊어질수록 그래디언트가
-  <b>0에 가깝게 소실</b>됩니다. ReLU는 양수 구간에서 미분이 항상 1이라 이 문제를 크게 줄여줍니다.
-  깊이(층 수)를 늘려가며 그래디언트 크기가 어떻게 변하는지 관찰해보세요.`,
+  <b>0에 가깝게 소실</b>됩니다.
+
+  <div class="analogy">🗣️ <b>비유</b>: 여러 사람이 한 줄로 서서 귓속말을 전달하는 "전화 게임"과 비슷해요. 한 사람을 거칠 때마다 메시지가 조금씩 부정확해지는데(0.25배로 흐려진다고 하면), 20명을 거치면 0.25²⁰ ≈ 사실상 아무 정보도 안 남아요. ReLU는 이 "흐려짐 배율"을 1로 유지해서 메시지가 끝까지 온전히 전달되게 해줍니다.</div>
+
+  ReLU는 양수 구간에서 미분이 항상 1이라 이 문제를 크게 줄여줍니다. 깊이(층 수)를 늘려가며
+  그래디언트 크기가 어떻게 변하는지 관찰해보세요.`,
   render(root){
     const p = panel('층 깊이에 따른 그래디언트 크기 (전형적인 활성값 x=0.5 기준)');
     const cw = el('div',{class:'canvas-wrap'});
@@ -1660,9 +1964,14 @@ const topic8_1 = {
 const topic8_2 = {
   id:'8-2', title:'8-2강. Batch Normalization & Layer Normalization',
   desc:`층을 통과하며 활성화 값의 분포가 계속 바뀌는 <b>내부 공변량 변화(internal covariate shift)</b>는
-  학습을 불안정하게 만듭니다. 정규화는 배치의 평균/분산으로 값을 표준화한 뒤(<code>(x-μ)/σ</code>),
-  학습 가능한 <b>γ(scale), β(shift)</b>로 다시 조정합니다. 아래에서 임의로 치우친 활성화 분포가
-  정규화 후 어떻게 안정되는지 확인해보세요.`,
+  학습을 불안정하게 만듭니다.
+
+  <div class="formula">
+  <span class="term">정규화 + 재조정</span> &nbsp; x̂ = (x−μ)/σ &nbsp;&nbsp;→&nbsp;&nbsp; y = γ·x̂ + β
+  <small>μ,σ는 배치(BatchNorm)나 한 샘플의 뉴런들(LayerNorm)로부터 계산. γ,β는 학습 가능한 파라미터로, "표준화했다가 다시 필요한 만큼 늘리고 옮기는" 역할.</small>
+  </div>
+
+  아래에서 임의로 치우친 활성화 분포가 정규화 후 어떻게 안정되는지 확인해보세요.`,
   render(root){
     const p = panel('정규화 전 / 후 활성화 분포');
     const cw = el('div',{class:'canvas-wrap'});
@@ -1719,8 +2028,15 @@ const topic8_2 = {
 const topic8_3 = {
   id:'8-3', title:'8-3강. Loss Landscape이 꼬불꼬불해진다?!',
   desc:`실제 신경망의 손실함수는 2-4강에서 본 매끈한 그릇 모양이 아니라, <b>여러 개의 국소 최솟값
-  (local minima)과 안장점(saddle point)</b>이 있는 울퉁불퉁한 지형입니다. 시작점을 바꿔가며
-  경사하강법이 전역 최솟값이 아닌 다른 골짜기에 갇힐 수 있다는 걸 확인해보세요.`,
+  (local minima)과 안장점(saddle point)</b>이 있는 울퉁불퉁한 지형입니다.
+
+  <div class="formula">
+  <span class="term">국소 최솟값</span> &nbsp; ∇f(w*)=0 이고 주변 모든 방향에서 f(w*)가 최소
+  &nbsp;&nbsp; <span class="term">안장점</span> &nbsp; ∇f(w*)=0 이지만 어떤 방향은 증가, 어떤 방향은 감소
+  <small>둘 다 그래디언트가 0이라 경사하강법이 멈출 수 있는 지점이지만, 안장점은 진짜 최솟값이 아닙니다.</small>
+  </div>
+
+  시작점을 바꿔가며 경사하강법이 전역 최솟값이 아닌 다른 골짜기에 갇힐 수 있다는 걸 확인해보세요.`,
   render(root){
     const p = panel('울퉁불퉁한 손실 지형 위의 경사하강');
     const cw = el('div',{class:'canvas-wrap'});
@@ -1780,8 +2096,15 @@ const topic8_3 = {
 const topic8_4 = {
   id:'8-4', title:'8-4강. 과적합(Overfitting)과 데이터 증강(Data Augmentation)',
   desc:`모델이 <b>학습 데이터의 노이즈까지 외워버려서</b> 새로운 데이터에 일반화하지 못하는 현상이
-  과적합입니다. 다항식 차수(degree)를 높여가며 학습 데이터에는 완벽히 맞지만 진짜 패턴과는
-  멀어지는 곡선을 확인하고, "데이터 증강"으로 데이터를 늘리면 과적합이 줄어드는 것도 확인해보세요.`,
+  과적합입니다.
+
+  <div class="formula">
+  <span class="term">편향-분산 트레이드오프</span> &nbsp; 총 오차 ≈ Bias² + Variance + noise
+  <small>모델이 너무 단순하면 Bias(편향)가 커지고(과소적합), 너무 복잡하면 Variance(분산)가 커집니다(과적합) — 둘의 균형점을 찾는 게 목표.</small>
+  </div>
+
+  다항식 차수(degree)를 높여가며 학습 데이터에는 완벽히 맞지만 진짜 패턴과는 멀어지는 곡선을
+  확인하고, "데이터 증강"으로 데이터를 늘리면 과적합이 줄어드는 것도 확인해보세요.`,
   render(root){
     const p = panel('다항 회귀의 과적합');
     const cw = el('div',{class:'canvas-wrap'});
@@ -1831,8 +2154,18 @@ const topic8_4 = {
 const topic8_5 = {
   id:'8-5', title:'8-5강. Dropout에 대한 진실',
   desc:`학습 중 매 스텝마다 <b>무작위로 일부 뉴런을 꺼버려서(dropout)</b> 특정 뉴런에 과도하게
-  의존하지 못하게 만드는 정규화 기법입니다. 결과적으로 여러 개의 서로 다른 "얇은 네트워크"를
-  앙상블하는 효과를 냅니다. Dropout 비율을 조절하고 "새 에폭"을 눌러 매번 다른 뉴런이 꺼지는 걸 확인해보세요.`,
+  의존하지 못하게 만드는 정규화 기법입니다.
+
+  <div class="formula">
+  <span class="term">학습 시 (Inverted Dropout)</span> &nbsp; a' = a · mask / (1−p) &nbsp;, mask~Bernoulli(1−p)
+  <small>뉴런을 확률 p로 꺼버리고(mask=0), 살아남은 뉴런은 1/(1-p)로 키워서 출력의 기대값을 유지. 테스트 시엔 그대로 전체 뉴런을 사용합니다.</small>
+  </div>
+
+  결과적으로 여러 개의 서로 다른 "얇은 네트워크"를 앙상블하는 효과를 냅니다.
+
+  <div class="analogy">👥 <b>비유</b>: 팀 프로젝트를 할 때마다 무작위로 팀원 몇 명을 그날 훈련에서 빼본다고 생각해보세요. 그러면 "에이스 한 명"에게만 의존하는 팀이 아니라, 누가 빠져도 나머지가 알아서 잘 굴러가는 팀이 만들어져요. Dropout은 신경망 버전의 "돌아가며 빠지는 훈련"인 셈입니다.</div>
+
+  Dropout 비율을 조절하고 "새 에폭"을 눌러 매번 다른 뉴런이 꺼지는 걸 확인해보세요.`,
   render(root){
     const p = panel('네트워크 다이어그램 위의 Dropout');
     const cw = el('div',{class:'canvas-wrap'});
@@ -1896,9 +2229,20 @@ const topic8_5 = {
 const topic8_6 = {
   id:'8-6', title:'8-6강. 정규화(Regularization)와 MAP',
   desc:`손실함수에 <b>가중치 크기에 대한 벌점</b>을 추가해서 모델이 너무 복잡해지는(=과적합) 것을
-  막는 기법입니다. L2(<code>λΣw²</code>)는 원형 제약, L1(<code>λΣ|w|</code>)은 다이아몬드 제약을
-  거는 것과 같고, 이는 베이즈 통계의 <b>MAP(Maximum A Posteriori)</b> 추정에서 가중치에 사전분포를
-  부여하는 것과 수학적으로 동일합니다. λ를 조절하며 최적해가 원점 쪽으로 끌려오는 걸 확인해보세요.`,
+  막는 기법입니다.
+
+  <div class="formula">
+  <span class="term">L2 (Ridge)</span> &nbsp; L = MSE + λΣw² &nbsp;&nbsp;&nbsp; <span class="term">L1 (Lasso)</span> &nbsp; L = MSE + λΣ|w|
+  <small>λ가 클수록 가중치를 더 강하게 억누름. L2는 원형 제약, L1은 다이아몬드 제약을 거는 것과 기하학적으로 동일.</small>
+  </div>
+  <div class="formula">
+  <span class="term">MAP (베이즈 관점)</span> &nbsp; argmax_w [ log P(data|w) + log P(w) ]
+  <small>P(w)를 "w가 0 근처에 있을 가능성이 높다"는 사전분포(prior)로 두면, 이 식이 정확히 L2/L1 정규화와 같아집니다 — "정규화 = 가중치에 대한 사전 믿음을 반영하는 것"이라는 의미.</small>
+  </div>
+
+  <div class="analogy">🎒 <b>비유</b>: 여행 가방 무게 제한과 비슷해요. 짐(가중치)을 원하는 만큼 다 채우고 싶지만, 무게 제한(λ)이 있으면 꼭 필요한 것만 챙기게 되죠. λ가 클수록 제한이 빡빡해져서 가방(모델)이 더 가벼워지고(단순해지고) 과적합될 위험이 줄어듭니다.</div>
+
+  λ를 조절하며 최적해가 원점 쪽으로 끌려오는 걸 확인해보세요.`,
   render(root){
     const p = panel('L1 vs L2 정규화가 최적해를 끌어당기는 방식');
     const cw = el('div',{class:'canvas-wrap'});

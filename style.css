@@ -133,6 +133,23 @@ body{
 .topic-desc b{ color: var(--text); font-weight:600; }
 .topic-desc code{ font-family:var(--mono); color:var(--amber); background:rgba(255,180,84,.08); padding:1px 5px; border-radius:3px; font-size:.92em;}
 
+.formula{
+  font-family: var(--mono); font-size: 15px; color: var(--text);
+  background: linear-gradient(180deg, rgba(99,217,196,.06), rgba(99,217,196,.02));
+  border: 1px solid #2c4a58; border-left: 3px solid var(--teal);
+  border-radius: 6px; padding: 12px 18px; margin: 14px 0;
+  max-width: 66ch; line-height: 1.7; letter-spacing: .01em;
+}
+.formula .term{ color: var(--amber); }
+.formula small{ display:block; font-family:var(--body); color:var(--text-faint); font-size:12px; margin-top:6px; letter-spacing:0; }
+
+.analogy{
+  font-size: 13.5px; color: var(--text-dim); max-width: 66ch;
+  background: rgba(180,139,242,.07); border: 1px dashed #4a3a6b;
+  border-radius: 6px; padding: 10px 14px; margin: 12px 0; line-height:1.65;
+}
+.analogy b{ color: var(--violet); }
+
 .panel{
   background: linear-gradient(180deg, var(--panel-raised), var(--panel));
   border: 1px solid var(--hairline);

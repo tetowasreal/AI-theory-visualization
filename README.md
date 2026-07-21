@@ -7,13 +7,17 @@ GitHub Pages에 바로 올릴 수 있습니다.
 ## 포함된 내용
 
 - **1강** 딥러닝 개요 · 경사하강법 vs Newton's Method · 자기지도학습 · 강화학습
-- **2강** 인공신경망 · 선형회귀 · 경사하강법(2D) · 웨이트 초기화
+- **2강** 인공신경망 · 선형회귀 · 경사하강법(2D) · 웨이트 초기화 · **경사하강법의 종류 (SGD/Momentum/RMSProp/Adam)**
 - **3강** 극한과 입실론-델타 · 미분 · 연쇄법칙 · 편미분과 그래디언트
 - **4강** 랜덤변수와 확률분포 · 평균과 분산 · 균등/정규분포
 - **5강** Linear activation의 통찰 · 역전파(Backpropagation)
 - **6강** Sigmoid · 로지스틱회귀 · Cross-Entropy/MLE · 소프트맥스회귀
 - **7강** Universal Approximation Theorem
 - **8강** Vanishing Gradient/ReLU · BatchNorm/LayerNorm · Loss Landscape · 과적합/데이터증강 · Dropout · Regularization/MAP
+
+총 29개 항목. 각 항목의 설명(`desc`)에는 핵심 **수식과 그 수식에 대한 풀이**가 포함되어 있고,
+직관적으로 이해하는 데 확실히 도움이 되는 항목에는 **비유**도 함께 들어있습니다
+(모든 항목에 억지로 넣지는 않았습니다 — 수식/설명만으로 충분한 곳은 비유 없이 깔끔하게 두었습니다).
 
 ## 로컬에서 미리보기
 
