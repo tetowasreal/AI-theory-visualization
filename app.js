@@ -2636,11 +2636,3 @@ document.addEventListener('DOMContentLoaded', ()=>{
   const startId = (hashId && findTopic(hashId)) ? hashId : CHAPTERS[0].topics[0].id;
   goToTopic(startId);
 });
-
-// KaTeX (local vendor/ or CDN fallback, see index.html loader) may finish loading
-// after the first typesetMath() attempt already ran and no-opped. Once it's
-// actually ready, re-typeset whatever topic is currently on screen.
-window.addEventListener('katex-ready', ()=>{
-  const stage = document.getElementById('stage');
-  if(stage) typesetMath(stage);
-});
