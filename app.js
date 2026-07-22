@@ -491,26 +491,38 @@ const topic1_4 = {
   <small>"이 상태(s)의 가치는, 가장 좋은 행동(a)을 했을 때 받는 즉시 보상(r) + 할인된 미래 가치(γV(s'))" — 이 재귀적 정의를 반복 계산하는 게 가치반복(Value Iteration)입니다.</small>
   </div>
 
-  아래는 5×5 그리드월드에서 이 식을 반복 적용해 각 칸의 가치를 계산하고, 그 가치가 높은 방향으로
-  이동하는 정책을 실행하는 예시입니다. 할인율 γ를 바꿔보세요 — γ가 작을수록 "당장의 보상"을,
-  γ가 클수록 "먼 미래의 보상"까지 중요하게 여깁니다.`,
+  아래 그리드월드에는 <b>가까운 작은 보상</b>(+4)과 <b>멀리 있는 큰 보상</b>(+20), 둘 다 있습니다.
+  할인율 γ를 바꿔보세요 — γ가 작으면 "먼 미래의 보상은 크게 깎아서 본다"는 뜻이라 당장 손에 잡히는
+  작은 보상을 택하고, γ가 크면 "미래도 거의 깎지 않고 본다"는 뜻이라 오래 걸려도 큰 보상 쪽으로 향합니다.
+
+  <div class="analogy">🍬 <b>비유</b>: 유명한 "마시멜로 실험"과 같아요. 지금 당장 마시멜로 1개(가까운 작은 보상)를 먹을지,
+  15분 참고 기다려서 마시멜로 5개(먼 큰 보상)를 받을지 — γ(할인율)는 정확히 "미래를 얼마나 참을성 있게
+  기다리는가"를 수치로 표현한 값입니다.</div>`,
   render(root){
     const p = panel('그리드월드 · 가치반복(Value Iteration) 기반 정책');
     const cw = el('div',{class:'canvas-wrap'});
     const canvas = el('canvas'); cw.appendChild(canvas); p.appendChild(cw);
 
     const SIZE=5;
-    const goal=[4,4], obstacle=[[2,2],[1,3]];
+    const smallReward=[0,1], smallVal=4;   // close to start: small payoff
+    const bigReward=[4,4], bigVal=20;      // far from start: large payoff
+    const obstacle=[[2,2],[1,3]];
     let gamma=0.9;
     let V, agent=[0,0], reward=0, running=false, timer=null;
 
     function isObstacle(i,j){ return obstacle.some(([a,b])=>a===i&&b===j); }
+    function isTerminal(i,j){ return (i===smallReward[0]&&j===smallReward[1]) || (i===bigReward[0]&&j===bigReward[1]); }
+    function terminalValue(i,j){
+      if(i===smallReward[0]&&j===smallReward[1]) return smallVal;
+      if(i===bigReward[0]&&j===bigReward[1]) return bigVal;
+      return null;
+    }
     function valueIteration(){
       V = Array.from({length:SIZE},()=>Array(SIZE).fill(0));
-      for(let it=0; it<80; it++){
+      for(let it=0; it<150; it++){
         const Vn = V.map(r=>r.slice());
         for(let i=0;i<SIZE;i++) for(let j=0;j<SIZE;j++){
-          if(i===goal[0]&&j===goal[1]){ Vn[i][j]=10; continue; }
+          if(isTerminal(i,j)){ Vn[i][j]=terminalValue(i,j); continue; }
           if(isObstacle(i,j)){ Vn[i][j]=-5; continue; }
           const neighbors=[[i-1,j],[i+1,j],[i,j-1],[i,j+1]].filter(([a,b])=>a>=0&&a<SIZE&&b>=0&&b<SIZE);
           let best=-Infinity;
@@ -545,29 +557,41 @@ const topic1_4 = {
         ctx.fillStyle='#0b1620'; ctx.font='9px IBM Plex Mono, monospace';
         if(!isObstacle(i,j)) ctx.fillText(V[i][j].toFixed(1), j*cell+4, i*cell+13);
       }
-      ctx.fillStyle='#ffb454'; ctx.font='bold 16px sans-serif';
-      ctx.fillText('★', goal[1]*cell+cell/2-8, goal[0]*cell+cell/2+6);
+      ctx.font='bold 13px sans-serif'; ctx.fillStyle='#e7f0f2';
+      ctx.fillText('+4', smallReward[1]*cell+cell/2-10, smallReward[0]*cell+cell/2+5);
+      ctx.font='bold 20px sans-serif'; ctx.fillStyle='#ffb454';
+      ctx.fillText('★', bigReward[1]*cell+cell/2-9, bigReward[0]*cell+cell/2+7);
+      ctx.font='bold 11px sans-serif'; ctx.fillStyle='#93aab5';
+      ctx.fillText('+20', bigReward[1]*cell+cell/2-13, bigReward[0]*cell+cell/2+22);
       ctx.beginPath(); ctx.fillStyle='#63d9c4';
       ctx.arc(agent[1]*cell+cell/2, agent[0]*cell+cell/2, cell*0.22, 0, 7); ctx.fill();
     }
-    function reset(){ agent=[0,0]; reward=0; updReadout(); draw(); }
+    function reset(){ agent=[0,0]; reward=0; stop(); updReadout(); draw(); }
     function step(){
-      if(agent[0]===goal[0] && agent[1]===goal[1]){ stop(); return; }
+      if(isTerminal(agent[0],agent[1])){ stop(); return; }
       const mv = bestMove(agent[0],agent[1]);
-      if(mv){ agent=[mv[0],mv[1]]; reward += (agent[0]===goal[0]&&agent[1]===goal[1]) ? 10 : -1; }
+      if(mv){
+        agent=[mv[0],mv[1]];
+        reward += isTerminal(agent[0],agent[1]) ? terminalValue(agent[0],agent[1]) : -1;
+        if(isTerminal(agent[0],agent[1])) stop();
+      }
       updReadout(); draw();
     }
     function stop(){ running=false; clearInterval(timer); timer=null; }
     function updReadout(){
-      rd.innerHTML = `누적 보상: <b>${reward}</b> · γ(할인율): <b>${gamma.toFixed(2)}</b> · 에이전트 위치: <b>(${agent[0]},${agent[1]})</b>`;
+      const choseSmall = agent[0]===smallReward[0] && agent[1]===smallReward[1];
+      const choseBig = agent[0]===bigReward[0] && agent[1]===bigReward[1];
+      rd.innerHTML = `누적 보상: <b>${reward}</b> · γ(할인율): <b>${gamma.toFixed(2)}</b> · 에이전트 위치: <b>(${agent[0]},${agent[1]})</b>`
+        + (choseSmall ? ` · <b style="color:#93aab5">가까운 작은 보상 선택!</b>` : '')
+        + (choseBig ? ` · <b style="color:#ffb454">먼 큰 보상 선택!</b>` : '');
     }
 
     valueIteration(); 
     window.addEventListener('resize', draw);
 
     const controls = el('div',{class:'controls'});
-    controls.appendChild(makeSlider({label:'할인율 γ', min:0.5,max:0.99,step:0.01,value:gamma,
-      fmt2:v=>v.toFixed(2), onInput:v=>{ gamma=v; valueIteration(); draw(); }}).wrap);
+    controls.appendChild(makeSlider({label:'할인율 γ', min:0.5,max:0.99,step:0.01,value:gamma, accent:'#b48bf2',
+      fmt2:v=>v.toFixed(2), onInput:v=>{ gamma=v; valueIteration(); reset(); }}).wrap);
     p.appendChild(controls);
     const rd = el('div',{class:'readout'}); 
     const btnRow = el('div',{class:'btn-row'});
@@ -576,7 +600,7 @@ const topic1_4 = {
     p.appendChild(btnRow);
     p.appendChild(rd);
     reset();
-    p.appendChild(el('div',{class:'note'},['💡 색이 밝을수록(진한 amber) 그 칸의 가치 V(s)가 높습니다 — 에이전트는 항상 이웃 중 가치가 가장 높은 칸으로 이동합니다. 빨간 칸은 장애물(패널티), 별표는 목표(+10 보상)입니다.']));
+    p.appendChild(el('div',{class:'note'},['💡 γ=0.85 근처에서 정책이 뒤바뀝니다: γ≤0.85면 가까운 +4를 택하고, γ≥0.9면 8칸을 돌아가더라도 먼 +20을 택해요 — 할인율이 "미래 보상을 얼마나 깎아서 보는가"를 결정하기 때문입니다. 색이 밝을수록(amber) 그 칸의 가치 V(s)가 높습니다. 빨간 칸은 장애물(패널티)입니다.']));
     root.appendChild(p);
   }
 };
