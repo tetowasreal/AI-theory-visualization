@@ -32,36 +32,12 @@ body{
   background-attachment: fixed;
 }
 
-/* ---------- oscilloscope header strip ---------- */
-.scope-strip{
-  position: relative;
-  height: 84px;
-  background: linear-gradient(180deg, var(--bg-deep), #0a1520);
-  border-bottom: 1px solid var(--hairline);
-  overflow: hidden;
-}
-.scope-strip canvas{ width:100%; height:100%; display:block; }
-.scope-label{
-  position:absolute; left:20px; top:50%; transform:translateY(-50%);
-  display:flex; align-items:center; gap:8px;
-  font-family: var(--mono); font-size:12px; letter-spacing:.08em;
-  color: var(--amber); text-shadow: 0 0 8px rgba(255,180,84,.5);
-  background: rgba(8,16,25,.55); padding:6px 10px; border:1px solid var(--hairline); border-radius:3px;
-  backdrop-filter: blur(2px);
-}
-.scope-label .dot{
-  width:7px;height:7px;border-radius:50%;background:var(--amber);
-  box-shadow:0 0 6px 2px rgba(255,180,84,.7);
-  animation: blink 1.4s ease-in-out infinite;
-}
-@keyframes blink{ 0%,100%{opacity:1} 50%{opacity:.25} }
-
 /* ---------- layout ---------- */
-.app{ display:flex; min-height: calc(100vh - 84px); }
+.app{ display:flex; min-height: 100vh; }
 
 .nav-toggle{
   display:none;
-  position: fixed; z-index: 40; top: 96px; left: 12px;
+  position: fixed; z-index: 40; top: 12px; left: 12px;
   background: var(--panel-raised); color: var(--amber);
   border:1px solid var(--hairline); border-radius:4px;
   font-family: var(--mono); font-size:12px; padding:8px 12px; cursor:pointer;
@@ -72,7 +48,7 @@ body{
   background: linear-gradient(180deg, var(--panel), var(--bg-deep));
   border-right: 1px solid var(--hairline);
   padding: 22px 16px 24px;
-  position: sticky; top:84px; height: calc(100vh - 84px); overflow-y:auto;
+  position: sticky; top:0; height: 100vh; overflow-y:auto;
 }
 .brand{ display:flex; gap:12px; align-items:center; margin-bottom:20px; padding:0 6px;}
 .brand-mark{
@@ -173,23 +149,24 @@ body{
 .canvas-wrap canvas{ display:block; width:100%; }
 
 .controls{ display:flex; flex-wrap:wrap; gap:22px; margin-top:18px; }
-.control{ min-width: 190px; flex:1; }
+.control{ min-width: 190px; flex:1; --accent: var(--amber); --accent-dim: var(--amber-dim); }
 .control label{
   display:flex; justify-content:space-between; font-family:var(--mono); font-size:11.5px;
   color: var(--text-dim); margin-bottom:8px;
 }
-.control label .val{ color: var(--amber); }
+.control label .val{ color: var(--accent); font-weight:600; transition: text-shadow .2s ease; }
+.control.is-active label .val{ text-shadow: 0 0 8px var(--accent); }
 .control input[type=range]{
   width:100%; -webkit-appearance:none; height:4px; border-radius:2px;
   background: var(--grid-line); outline:none;
 }
 .control input[type=range]::-webkit-slider-thumb{
   -webkit-appearance:none; width:15px; height:15px; border-radius:50%;
-  background: var(--amber); border:2px solid #0b1620; cursor:pointer;
-  box-shadow: 0 0 0 1px var(--amber-dim);
+  background: var(--accent); border:2px solid #0b1620; cursor:pointer;
+  box-shadow: 0 0 0 1px var(--accent-dim);
 }
 .control input[type=range]::-moz-range-thumb{
-  width:15px; height:15px; border-radius:50%; background:var(--amber);
+  width:15px; height:15px; border-radius:50%; background:var(--accent);
   border:2px solid #0b1620; cursor:pointer;
 }
 .control select{
@@ -226,8 +203,8 @@ body{
 @media (max-width: 880px){
   .nav-toggle{ display:block; }
   .sidebar{
-    position:fixed; left:0; top:84px; z-index:30; transform:translateX(-100%);
-    transition: transform .2s ease; height:calc(100vh - 84px); width:80vw; max-width:320px;
+    position:fixed; left:0; top:0; z-index:30; transform:translateX(-100%);
+    transition: transform .2s ease; height:100vh; width:80vw; max-width:320px;
   }
   .sidebar.open{ transform:translateX(0); }
   .stage{ padding: 70px 18px 60px; }

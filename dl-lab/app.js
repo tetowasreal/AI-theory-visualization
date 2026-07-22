@@ -199,6 +199,8 @@ function typesetMath(container){
   }catch(e){ /* ignore rendering errors, formula text still readable as-is */ }
 }
 
+function texColor(hex, content){ return `\\textcolor{${hex}}{${content}}`; }
+
 function el(tag, attrs={}, children=[]){
   const e = document.createElement(tag);
   for(const k in attrs){
@@ -215,13 +217,18 @@ function el(tag, attrs={}, children=[]){
   return e;
 }
 
-function makeSlider({label, min, max, step, value, onInput, fmt2=(v)=>v}){
+function makeSlider({label, min, max, step, value, onInput, fmt2=(v)=>v, accent}){
   const wrap = el('div',{class:'control'});
+  if(accent) wrap.style.setProperty('--accent', accent);
   const lab = el('label',{}, [label+' ', el('span',{class:'val'}, [fmt2(value)])]);
   const input = el('input',{type:'range', min, max, step, value});
+  let activeTimer=null;
   input.addEventListener('input', ()=>{
     const v = parseFloat(input.value);
     lab.querySelector('.val').textContent = fmt2(v);
+    wrap.classList.add('is-active');
+    clearTimeout(activeTimer);
+    activeTimer = setTimeout(()=> wrap.classList.remove('is-active'), 500);
     onInput(v);
   });
   wrap.appendChild(lab); wrap.appendChild(input);
@@ -363,17 +370,24 @@ const topic1_2 = {
     ]));
 
     const controls = el('div',{class:'controls'});
-    controls.appendChild(makeSlider({label:'학습률 η (경사하강법)', min:0.01,max:0.3,step:0.01,value:lr,
+    controls.appendChild(makeSlider({label:'학습률 η (경사하강법)', min:0.01,max:0.3,step:0.01,value:lr, accent:'#b48bf2',
       fmt2:v=>v.toFixed(2), onInput:v=>{ lr=v; rebuild(); }}).wrap);
-    controls.appendChild(makeSlider({label:'시작점 x₀', min:-2,max:2,step:0.05,value:x0,
+    controls.appendChild(makeSlider({label:'시작점 x₀', min:-2,max:2,step:0.05,value:x0, accent:'#ff6b6b',
       fmt2:v=>v.toFixed(2), onInput:v=>{ x0=v; rebuild(); }}).wrap);
     controls.appendChild(makeSlider({label:'반복 횟수', min:1,max:25,step:1,value:steps,
       fmt2:v=>v, onInput:v=>{ steps=v; rebuild(); }}).wrap);
     p.appendChild(controls);
+    const liveFormula = el('div',{class:'formula', style:'margin-top:16px;'});
+    p.appendChild(liveFormula);
     const rd = el('div',{class:'readout'});
     p.appendChild(rd);
     const updReadout = ()=>{
       rd.innerHTML = `경사하강법 도착: <b>x=${fmt(gdPath.at(-1))}</b> · Newton 도착: <b>x=${fmt(nPath.at(-1))}</b> · 전역 최소점 근처: x≈±1.3, x=0`;
+      liveFormula.innerHTML =
+        `<span class="term">다음 스텝 계산 (x₀에서 첫 걸음)</span>
+         $$x_1 = ${texColor('#ff6b6b', x0.toFixed(2))} - ${texColor('#b48bf2', lr.toFixed(2))} \\times f'(${x0.toFixed(2)}) = ${(x0 - lr*df(x0)).toFixed(3)}$$
+         <small>학습률 η(보라)와 시작점 x₀(빨강)를 슬라이더로 움직이면 수식의 해당 부분이 같은 색으로 바뀝니다.</small>`;
+      typesetMath(liveFormula);
     };
     const origRebuild = rebuild;
     rebuild = function(){ origRebuild(); updReadout(); };
@@ -642,10 +656,10 @@ const topic2_1 = {
       edge(inX,inY[1],hidX,hidY[0],W1[0][1]); edge(inX,inY[1],hidX,hidY[1],W1[1][1]);
       edge(hidX,hidY[0],outX,outY,W2[0]); edge(hidX,hidY[1],outX,outY,W2[1]);
 
-      node(inX,inY[0],'x1', x1.toFixed(2), '#63d9c4');
+      node(inX,inY[0],'x1', x1.toFixed(2), '#ffb454');
       node(inX,inY[1],'x2', x2.toFixed(2), '#63d9c4');
-      node(hidX,hidY[0],'h1', a1[0].toFixed(2), '#ffb454');
-      node(hidX,hidY[1],'h2', a1[1].toFixed(2), '#ffb454');
+      node(hidX,hidY[0],'h1', a1[0].toFixed(2), '#e7f0f2');
+      node(hidX,hidY[1],'h2', a1[1].toFixed(2), '#e7f0f2');
       node(outX,outY,'ŷ', a2.toFixed(2), '#b48bf2');
 
       window._nn_out = {z1,a1,z2,a2};
@@ -653,9 +667,9 @@ const topic2_1 = {
     draw(); window.addEventListener('resize', draw);
 
     const controls = el('div',{class:'controls'});
-    controls.appendChild(makeSlider({label:'입력 x1', min:-2,max:2,step:0.05,value:x1, fmt2:v=>v.toFixed(2),
+    controls.appendChild(makeSlider({label:'입력 x1', min:-2,max:2,step:0.05,value:x1, fmt2:v=>v.toFixed(2), accent:'#ffb454',
       onInput:v=>{ x1=v; draw(); updRd(); }}).wrap);
-    controls.appendChild(makeSlider({label:'입력 x2', min:-2,max:2,step:0.05,value:x2, fmt2:v=>v.toFixed(2),
+    controls.appendChild(makeSlider({label:'입력 x2', min:-2,max:2,step:0.05,value:x2, fmt2:v=>v.toFixed(2), accent:'#63d9c4',
       onInput:v=>{ x2=v; draw(); updRd(); }}).wrap);
     controls.appendChild(makeSelect({label:'활성화함수', value:actName,
       options:[{value:'sigmoid',label:'Sigmoid'},{value:'relu',label:'ReLU'},{value:'tanh',label:'Tanh'},{value:'linear',label:'Linear (활성화 없음)'}],
@@ -669,8 +683,8 @@ const topic2_1 = {
       rd.innerHTML = `z1=[${o.z1.map(v=>v.toFixed(2)).join(', ')}] · a1=[${o.a1.map(v=>v.toFixed(2)).join(', ')}] · z2=${o.z2.toFixed(2)} · ŷ=${o.a2.toFixed(2)}`;
       liveFormula.innerHTML =
         `<span class="term">h1 뉴런 (실시간 대입)</span>
-         $$z_1 = (${W1[0][0]})(${x1.toFixed(2)}) + (${W1[0][1]})(${x2.toFixed(2)}) + ${B1[0]} = ${o.z1[0].toFixed(3)}$$
-         <small>슬라이더로 x1, x2를 움직이면 이 수식의 숫자가 그대로 바뀌는 걸 확인해보세요.</small>`;
+         $$z_1 = (${W1[0][0]})(${texColor('#ffb454', x1.toFixed(2))}) + (${W1[0][1]})(${texColor('#63d9c4', x2.toFixed(2))}) + ${B1[0]} = ${o.z1[0].toFixed(3)}$$
+         <small>슬라이더로 x1(주황), x2(청록)를 움직이면 수식에서 같은 색으로 표시된 부분이 그 자리에서 바뀌는 걸 확인해보세요.</small>`;
       typesetMath(liveFormula);
     }
     updRd();
@@ -713,7 +727,7 @@ const topic2_3 = {
       graph.plot(x=> w*x+b, {color:'#ffb454', width:2.2});
       const m = mse();
       rd.innerHTML = `w=<b>${w.toFixed(2)}</b> · b=<b>${b.toFixed(2)}</b> · MSE=<b>${m.toFixed(3)}</b>`;
-      liveFormula.innerHTML = `$$\\hat y = ${w.toFixed(2)}x ${b>=0?'+':'-'} ${Math.abs(b).toFixed(2)}$$`;
+      liveFormula.innerHTML = `$$\\hat y = ${texColor('#ffb454', w.toFixed(2))}x ${b>=0?'+':'-'} ${texColor('#63d9c4', Math.abs(b).toFixed(2))}$$`;
       typesetMath(liveFormula);
       const achieved = m <= GOAL;
       goalBadge.className = 'note' + (achieved ? '' : '');
@@ -725,9 +739,9 @@ const topic2_3 = {
     window.addEventListener('resize', ()=>{graph.resize(); draw();});
 
     const controls = el('div',{class:'controls'});
-    const wSlider = makeSlider({label:'기울기 w', min:-3,max:3,step:0.05,value:w, fmt2:v=>v.toFixed(2),
+    const wSlider = makeSlider({label:'기울기 w', min:-3,max:3,step:0.05,value:w, fmt2:v=>v.toFixed(2), accent:'#ffb454',
       onInput:v=>{ w=v; draw(); }});
-    const bSlider = makeSlider({label:'절편 b', min:-3,max:3,step:0.05,value:b, fmt2:v=>v.toFixed(2),
+    const bSlider = makeSlider({label:'절편 b', min:-3,max:3,step:0.05,value:b, fmt2:v=>v.toFixed(2), accent:'#63d9c4',
       onInput:v=>{ b=v; draw(); }});
     controls.appendChild(wSlider.wrap); controls.appendChild(bSlider.wrap);
     p.appendChild(controls);
@@ -1872,12 +1886,21 @@ const topic6_2 = {
     graph = new Graph(canvas,{xmin:-4,xmax:4,ymin:-4,ymax:4,heightCss:320});
     window.addEventListener('resize', ()=>{graph.resize(); draw();});
     const controls = el('div',{class:'controls'});
-    controls.appendChild(makeSlider({label:'w1', min:-3,max:3,step:0.1,value:w1, fmt2:v=>v.toFixed(1), onInput:v=>{w1=v;draw();}}).wrap);
-    controls.appendChild(makeSlider({label:'w2', min:-3,max:3,step:0.1,value:w2, fmt2:v=>v.toFixed(1), onInput:v=>{w2=v;draw();}}).wrap);
-    controls.appendChild(makeSlider({label:'b', min:-3,max:3,step:0.1,value:b, fmt2:v=>v.toFixed(1), onInput:v=>{b=v;draw();}}).wrap);
+    controls.appendChild(makeSlider({label:'w1', min:-3,max:3,step:0.1,value:w1, fmt2:v=>v.toFixed(1), accent:'#b48bf2', onInput:v=>{w1=v;draw();updFormula();}}).wrap);
+    controls.appendChild(makeSlider({label:'w2', min:-3,max:3,step:0.1,value:w2, fmt2:v=>v.toFixed(1), accent:'#ff6b6b', onInput:v=>{w2=v;draw();updFormula();}}).wrap);
+    controls.appendChild(makeSlider({label:'b', min:-3,max:3,step:0.1,value:b, fmt2:v=>v.toFixed(1), onInput:v=>{b=v;draw();updFormula();}}).wrap);
     p.appendChild(controls);
+    const liveFormula = el('div',{class:'formula', style:'margin-top:16px;'});
+    p.appendChild(liveFormula);
     const rd = el('div',{class:'readout'}); p.appendChild(rd);
-    draw();
+    function updFormula(){
+      liveFormula.innerHTML =
+        `<span class="term">결정 경계 (직선의 방정식)</span>
+         $$${texColor('#b48bf2', w1.toFixed(1))}x + ${texColor('#ff6b6b', w2.toFixed(1))}y + ${b.toFixed(1)} = 0$$
+         <small>w1(보라), w2(빨강) 슬라이더를 움직이면 경계선의 기울기가 어떻게 바뀌는지 수식과 함께 확인해보세요.</small>`;
+      typesetMath(liveFormula);
+    }
+    draw(); updFormula();
     p.appendChild(el('div',{class:'legend'},[
       el('span',{},[el('i',{style:'background:#ffb454'}),'클래스 0']),
       el('span',{},[el('i',{style:'background:#63d9c4'}),'클래스 1']),
@@ -2476,7 +2499,7 @@ const topic8_6 = {
 const CHAPTER_8 = { id:'8', label:'8강 · 학습 안정화와 일반화', topics:[topic8_1, topic8_2, topic8_3, topic8_4, topic8_5, topic8_6] };
 
 /* =========================================================
-   APP DRIVER — navigation, routing, scope-strip animation
+   APP DRIVER — navigation, routing
    ========================================================= */
 const CHAPTERS = [CHAPTER_1, CHAPTER_2, CHAPTER_3, CHAPTER_4, CHAPTER_5, CHAPTER_6, CHAPTER_7, CHAPTER_8];
 
@@ -2560,64 +2583,7 @@ function goToTopic(id){
   window.scrollTo({top:0, behavior:'smooth'});
   document.getElementById('sidebar').classList.remove('open');
 
-  // update scope strip label
-  document.getElementById('scopeText').textContent = 'SIGNAL: ' + chapter.label + ' · ' + topic.id;
-  scopeMode = chapterScopeMode(chapter.id);
-
   history.replaceState(null,'', '#'+id);
-}
-
-function chapterScopeMode(chId){
-  // different waveform "personality" per chapter — purely decorative signature element
-  return {
-    '1':'sine', '2':'sine2', '3':'chirp', '4':'noise', '5':'square', '6':'step', '7':'sumSine', '8':'noisyDecay'
-  }[chId] || 'sine';
-}
-
-/* ---- oscilloscope header animation (signature visual element) ---- */
-let scopeMode = 'sine';
-function initScope(){
-  const canvas = document.getElementById('scopeCanvas');
-  const ctx = canvas.getContext('2d');
-  function resize(){
-    const dpr = window.devicePixelRatio||1;
-    const w = canvas.parentElement.clientWidth, h = canvas.parentElement.clientHeight;
-    canvas.width = w*dpr; canvas.height = h*dpr;
-    canvas.style.width=w+'px'; canvas.style.height=h+'px';
-    ctx.setTransform(dpr,0,0,dpr,0,0);
-  }
-  resize(); window.addEventListener('resize', resize);
-  let t = 0;
-  function waveAt(x, phase){
-    switch(scopeMode){
-      case 'sine': return Math.sin(x*0.05 + phase);
-      case 'sine2': return Math.sin(x*0.05+phase)*0.6 + Math.sin(x*0.11+phase*1.7)*0.4;
-      case 'chirp': return Math.sin(x*(0.01+x*0.0002) + phase);
-      case 'noise': return Math.sin(x*0.05+phase) + (Math.sin(x*1.7+phase*3)*0.15);
-      case 'square': return Math.sign(Math.sin(x*0.06+phase));
-      case 'step': return Math.tanh(Math.sin(x*0.05+phase)*3);
-      case 'sumSine': return (Math.sin(x*0.04+phase)+Math.sin(x*0.09+phase*1.3)+Math.sin(x*0.15+phase*0.6))/3;
-      case 'noisyDecay': return Math.sin(x*0.05+phase)*Math.exp(-((x%300)/300));
-      default: return Math.sin(x*0.05+phase);
-    }
-  }
-  function frame(){
-    const w = canvas.parentElement.clientWidth, h = canvas.parentElement.clientHeight;
-    ctx.clearRect(0,0,w,h);
-    ctx.strokeStyle = 'rgba(255,180,84,.55)';
-    ctx.lineWidth = 1.6;
-    ctx.shadowColor = 'rgba(255,180,84,.5)'; ctx.shadowBlur = 6;
-    ctx.beginPath();
-    for(let x=0;x<w;x+=2){
-      const y = h/2 + waveAt(x+t, 0) * (h*0.32);
-      if(x===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
-    }
-    ctx.stroke();
-    ctx.shadowBlur = 0;
-    t += 1.6;
-    requestAnimationFrame(frame);
-  }
-  frame();
 }
 
 /* ---- mobile nav toggle ---- */
@@ -2630,9 +2596,16 @@ function initNavToggle(){
 /* ---- boot ---- */
 document.addEventListener('DOMContentLoaded', ()=>{
   buildSidebar();
-  initScope();
   initNavToggle();
   const hashId = location.hash.replace('#','');
   const startId = (hashId && findTopic(hashId)) ? hashId : CHAPTERS[0].topics[0].id;
   goToTopic(startId);
+});
+
+// KaTeX (local vendor/ or CDN fallback, see index.html loader) may finish loading
+// after the first typesetMath() attempt already ran and no-opped. Once it's
+// actually ready, re-typeset whatever topic is currently on screen.
+window.addEventListener('katex-ready', ()=>{
+  const stage = document.getElementById('stage');
+  if(stage) typesetMath(stage);
 });
